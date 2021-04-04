@@ -9,6 +9,7 @@ def main():
     print(f'{os.getcwd()}')
 
     root = Tk()
+    root.resizable(False, False)
     Gui.TkGui(root)
     root.mainloop()
 

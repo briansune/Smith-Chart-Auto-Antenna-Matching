@@ -4,12 +4,13 @@ import schemdraw.elements as elm
 
 class CircuitFig:
 
-    def __init__(self, stage: int, ser_shu_f: bool,
+    def __init__(self, afm_c: str, stage: int, ser_shu_f: bool,
                  shu_an_t: chr, ser0_t: chr, shu_chp_t: chr,
                  shu_an: str = '', ser0: str = '', shu_chp: str = ''):
 
         self.image_data = None
         self.d = Drawing()
+        self.afm_c = afm_c
 
         self.stage = stage
         self.ser_shu_f = ser_shu_f
@@ -52,7 +53,7 @@ class CircuitFig:
         self.d.add(elm.Ground())
         self.d.pop()
         lk2 = self.d.add(elm.Line().left())
-        self.d.add(elm.CurrentLabel().at(lk2).right().label('50 Ω')).color('b')
+        self.d.add(elm.CurrentLabel().at(lk2).right().label('50 Ω')).color(self.afm_c)
         self.up2img()
 
     def up2img(self):
