@@ -1,4 +1,5 @@
-from skrf.data import ring_slot
+# from skrf.data import ring_slot
+from skrf import Network
 import tkinter as tk
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -6,8 +7,7 @@ import numpy as np
 import CircuitFig
 from PIL import ImageTk, Image
 import io
-import matplotlib
-import MatchCal
+# import MatchCal
 
 
 class TkGui:
@@ -19,12 +19,24 @@ class TkGui:
         self.right_frame = tk.Frame(self.master)
         self.right_frame.pack(side=tk.LEFT)
 
-        MatchCal.MatchCal()
+        # MatchCal.MatchCal()
 
         self.fig = Figure(figsize=(5, 6), dpi=100)
         self.fig_cvs = FigureCanvasTkAgg(self.fig, master=self.top_frame)
         self.ax = self.fig.gca()
         self.fig_cvs.get_tk_widget().pack(side=tk.LEFT)
+
+        try:
+            with open('ring slot.s1p', 'r') as f:
+                pass
+        except IOError:
+            with open('ring slot.s1p', 'a+') as wf:
+                wf.write("""!Created with skrf (http://scikit-rf.org).
+        # GHz S RI R 50.0
+        !freq ReS11 ImS11
+        75.0 -0.503723180993 0.457844804761""")
+
+        self.my_slot = Network('ring slot.s1p')
 
         self.plt_z0 = np.array([[[50+0j]]])
         self.plt_freq = 2.45e9
@@ -34,7 +46,6 @@ class TkGui:
         self.fig2gui(np.array([[[74+84j]]]), 'After Match', 'g', 'o')
         self.fig2gui(np.array([[[24-24j]]]), 'After Match', 'orange', 'o')
 
-        matplotlib.use('agg')
         crcfg = CircuitFig.CircuitFig('b', 1, False, 'c', 'l', 'c', '3pF')
         image = Image.open(io.BytesIO(crcfg.image_data)).resize((300, 180), Image.ANTIALIAS)
         self.conv2img = ImageTk.PhotoImage(image)
@@ -75,14 +86,14 @@ class TkGui:
                 label: str = '', color: str = 'r', mark: str = 's',
                 plt_sel: bool = False) -> None:
 
-        ring_slot.frequency = self.plt_freq
-        ring_slot.z0 = self.plt_z0
-        ring_slot.z = plt_data
+        self.my_slot.frequency = self.plt_freq
+        self.my_slot.z0 = self.plt_z0
+        self.my_slot.z = plt_data
 
         if plt_sel:
-            ring_slot.plot_s_db(ax=self.ax)
+            self.my_slot.plot_s_db(ax=self.ax)
         else:
-            ring_slot.plot_s_smith(ax=self.ax, draw_labels=True, show_legend=False,
+            self.my_slot.plot_s_smith(ax=self.ax, draw_labels=True, show_legend=False,
                                    label=label, color=color, chart_type='zy', marker=mark)
 
         self.ax.legend(bbox_to_anchor=(0.5, 1.05), loc='lower center', ncol=3,

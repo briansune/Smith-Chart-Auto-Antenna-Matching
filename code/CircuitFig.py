@@ -18,14 +18,14 @@ class CircuitFig:
         self.shu_an = self.ser0 = self.shu_chp = ''
 
         self.shu_an_t = {'r': elm.Capacitor(),
-                        'l': elm.Inductor(),
-                        'c': elm.Capacitor()}[shu_an_t]
+                         'l': elm.Inductor(),
+                         'c': elm.Capacitor()}[shu_an_t]
         self.ser0_t = {'r': elm.Capacitor(),
-                        'l': elm.Inductor(),
-                        'c': elm.Capacitor()}[ser0_t]
+                       'l': elm.Inductor(),
+                       'c': elm.Capacitor()}[ser0_t]
         self.shu_chp_t = {'r': elm.Capacitor(),
-                        'l': elm.Inductor(),
-                        'c': elm.Capacitor()}[shu_chp_t]
+                          'l': elm.Inductor(),
+                          'c': elm.Capacitor()}[shu_chp_t]
 
         if self.stage >= 1 and not self.ser_shu_f:
             self.shu_an = shu_an
@@ -57,5 +57,5 @@ class CircuitFig:
         self.up2img()
 
     def up2img(self):
-        self.d.draw()
+        self.d.draw(show=False)
         self.image_data = self.d.get_imagedata(ImageFormat.PNG)
