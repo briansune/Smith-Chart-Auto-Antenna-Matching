@@ -10,49 +10,6 @@ import matplotlib
 import MatchCal
 
 
-def fig2gui(frame: tk.Frame, fig2plt: Figure,
-            plt_freq: np.array, plt_z0: np.array,
-            plt_data: np.array, plt_sel: bool = False) -> None:
-
-    ring_slot.frequency = plt_freq
-    # normalization
-    ring_slot.z0 = plt_z0
-    ring_slot.z = plt_data
-
-    ax = fig2plt.gca()
-
-    if plt_sel:
-        ring_slot.plot_s_db(ax=ax)
-    else:
-        ring_slot.plot_s_smith(ax=ax, draw_labels=True, show_legend=False,
-                               label='To Match', color='r',
-                               chart_type='zy', marker='s')
-
-        ring_slot.z = np.array([[[50-50j]]])
-        ring_slot.plot_s_smith(ax=ax, draw_labels=True, show_legend=False,
-                               label='After Match', color='b',
-                               chart_type='zy', marker='o')
-        ring_slot.z = np.array([[[50 + 20j]]])
-        ring_slot.plot_s_smith(ax=ax, draw_labels=True, show_legend=False,
-                               label='After Match', color='y',
-                               chart_type='zy', marker='o')
-        ring_slot.z = np.array([[[50 + 80j]]])
-        ring_slot.plot_s_smith(ax=ax, draw_labels=True, show_legend=False,
-                               label='After Match', color='g',
-                               chart_type='zy', marker='o')
-        ring_slot.z = np.array([[[20 - 30j]]])
-        ring_slot.plot_s_smith(ax=ax, draw_labels=True, show_legend=False,
-                               label='After Match', color='orange',
-                               chart_type='zy', marker='o')
-
-    ax.legend(bbox_to_anchor=(0.5, 1.05), loc='lower center', ncol=3,
-              fancybox=True, shadow=True)
-
-    canvas = FigureCanvasTkAgg(fig2plt, master=frame)
-    canvas.draw()
-    canvas.get_tk_widget().pack(side=tk.LEFT)
-
-
 class TkGui:
 
     def __init__(self, master):
@@ -65,10 +22,17 @@ class TkGui:
         MatchCal.MatchCal()
 
         self.fig = Figure(figsize=(5, 6), dpi=100)
+        self.fig_cvs = FigureCanvasTkAgg(self.fig, master=self.top_frame)
+        self.ax = self.fig.gca()
+        self.fig_cvs.get_tk_widget().pack(side=tk.LEFT)
 
-        z0 = np.array([[[50+0j]]])
-        plt_d = np.array([[[50+50j]]])
-        fig2gui(self.top_frame, self.fig, 2.45e9, z0, plt_d)
+        self.plt_z0 = np.array([[[50+0j]]])
+        self.plt_freq = 2.45e9
+        self.fig2gui(np.array([[[50-50j]]]), 'To Match', 'r', 's')
+        self.fig2gui(np.array([[[50+50j]]]), 'After Match', 'b', 'o')
+        self.fig2gui(np.array([[[50-50j]]]), 'After Match', 'y', 'o')
+        self.fig2gui(np.array([[[74+84j]]]), 'After Match', 'g', 'o')
+        self.fig2gui(np.array([[[24-24j]]]), 'After Match', 'orange', 'o')
 
         matplotlib.use('agg')
         crcfg = CircuitFig.CircuitFig('b', 1, False, 'c', 'l', 'c', '3pF')
@@ -106,3 +70,21 @@ class TkGui:
         self.lb4.image = self.conv2img
         self.lb4.configure(image=self.conv2img)
         self.lb4.grid(row=1, column=1)
+
+    def fig2gui(self, plt_data: np.array,
+                label: str = '', color: str = 'r', mark: str = 's',
+                plt_sel: bool = False) -> None:
+
+        ring_slot.frequency = self.plt_freq
+        ring_slot.z0 = self.plt_z0
+        ring_slot.z = plt_data
+
+        if plt_sel:
+            ring_slot.plot_s_db(ax=self.ax)
+        else:
+            ring_slot.plot_s_smith(ax=self.ax, draw_labels=True, show_legend=False,
+                                   label=label, color=color, chart_type='zy', marker=mark)
+
+        self.ax.legend(bbox_to_anchor=(0.5, 1.05), loc='lower center', ncol=3,
+                       fancybox=True, shadow=True)
+        self.fig_cvs.draw()
