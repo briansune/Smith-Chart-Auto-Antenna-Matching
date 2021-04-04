@@ -1,5 +1,4 @@
-# from skrf.data import ring_slot
-from skrf import Network
+import skrf
 import tkinter as tk
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -27,7 +26,7 @@ class TkGui:
         self.fig_cvs.get_tk_widget().pack(side=tk.LEFT)
 
         try:
-            with open('ring slot.s1p', 'r') as f:
+            with open('ring slot.s1p', 'r'):
                 pass
         except IOError:
             with open('ring slot.s1p', 'a+') as wf:
@@ -36,7 +35,7 @@ class TkGui:
         !freq ReS11 ImS11
         75.0 -0.503723180993 0.457844804761""")
 
-        self.my_slot = Network('ring slot.s1p')
+        self.my_slot = skrf.Network('ring slot.s1p')
 
         self.plt_z0 = np.array([[[50+0j]]])
         self.plt_freq = 2.45e9
@@ -94,7 +93,7 @@ class TkGui:
             self.my_slot.plot_s_db(ax=self.ax)
         else:
             self.my_slot.plot_s_smith(ax=self.ax, draw_labels=True, show_legend=False,
-                                   label=label, color=color, chart_type='zy', marker=mark)
+                                      label=label, color=color, chart_type='zy', marker=mark)
 
         self.ax.legend(bbox_to_anchor=(0.5, 1.05), loc='lower center', ncol=3,
                        fancybox=True, shadow=True)
