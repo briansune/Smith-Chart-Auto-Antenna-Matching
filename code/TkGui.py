@@ -109,7 +109,7 @@ class TkGui:
         self.ety_lb1c = tk.Label(self.lower_ety_f, text='j')
         self.ety_lb1c.pack(side=tk.LEFT)
 
-        self.enter = tk.Button(self.lower_ety_f, text="Enter",
+        self.enter = tk.Button(self.lower_ety_f, text="Start Auto Solver",
                                command=self.ld2chart)
         self.enter.pack(side=tk.LEFT)
 
