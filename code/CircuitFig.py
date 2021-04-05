@@ -5,8 +5,7 @@ import schemdraw.elements as elm
 class CircuitFig:
 
     def __init__(self, afm_c: str, stage: int, ser_shu_f: bool,
-                 shu_an_t: chr, ser0_t: chr, shu_chp_t: chr,
-                 shu_an: str = '', ser0: str = '', shu_chp: str = '', final_z: str = '50+0j'):
+                 cmp_l: list, cmp_v: list, final_z: str):
 
         self.image_data = None
         self.d = Drawing()
@@ -19,20 +18,20 @@ class CircuitFig:
 
         self.shu_an_t = {'r': elm.Capacitor(),
                          'l': elm.Inductor(),
-                         'c': elm.Capacitor()}[shu_an_t]
+                         'c': elm.Capacitor()}[cmp_l[0]]
         self.ser0_t = {'r': elm.Capacitor(),
                        'l': elm.Inductor(),
-                       'c': elm.Capacitor()}[ser0_t]
+                       'c': elm.Capacitor()}[cmp_l[1]]
         self.shu_chp_t = {'r': elm.Capacitor(),
                           'l': elm.Inductor(),
-                          'c': elm.Capacitor()}[shu_chp_t]
+                          'c': elm.Capacitor()}[cmp_l[2]]
 
         if self.stage >= 1 and not self.ser_shu_f:
-            self.shu_an = shu_an
+            self.shu_an = cmp_v[0]
         if self.stage >= 2 or self.ser_shu_f:
-            self.ser0 = ser0
+            self.ser0 = cmp_v[1]
         if self.stage >= 3 or self.ser_shu_f:
-            self.shu_chp = shu_chp
+            self.shu_chp = cmp_v[2]
 
         self.final_z = final_z
 

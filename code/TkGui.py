@@ -54,53 +54,34 @@ class TkGui:
         self.fig2gui(np.array([[[50+0j]]]), 'After Match', 'g', 'o')
         self.fig2gui(np.array([[[50+0j]]]), 'After Match', 'orange', 'o')
 
-        crcfg = CircuitFig.CircuitFig('b', 1, False, 'c', 'l', 'c', shu_an='NC', final_z='32+11j')
-        image = Image.open(io.BytesIO(crcfg.image_data)).resize((300, 180), Image.ANTIALIAS)
-        self.conv2img = ImageTk.PhotoImage(image)
-
         self.lb1 = tk.Label(self.upper_sch_f, relief="ridge")
-        self.lb1.image = self.conv2img
-        self.lb1.configure(image=self.conv2img)
         self.lb1_tit = tk.Label(
             self.upper_sch_f, text='Shunt Matching', relief="raised").grid(
             row=0, column=0, sticky="nsew")
         self.lb1.grid(row=1, column=0)
 
-        crcfg2 = CircuitFig.CircuitFig('y', 1, True, 'c', 'l', 'c', ser0='NC')
-        image = Image.open(io.BytesIO(crcfg2.image_data)).resize((300, 180), Image.ANTIALIAS)
-        self.conv2img = ImageTk.PhotoImage(image)
-
         self.lb2 = tk.Label(self.upper_sch_f, relief="ridge")
-        self.lb2.image = self.conv2img
-        self.lb2.configure(image=self.conv2img)
         self.lb2_tit = tk.Label(
             self.upper_sch_f, text='Series Matching', relief="raised").grid(
             row=0, column=1, sticky="nsew")
         self.lb2.grid(row=1, column=1)
 
-        crcfg3 = CircuitFig.CircuitFig('g', 2, False, 'c', 'l', 'c', shu_an='NC', ser0='NC')
-        image = Image.open(io.BytesIO(crcfg3.image_data)).resize((300, 180), Image.ANTIALIAS)
-        self.conv2img = ImageTk.PhotoImage(image)
-
         self.lb3 = tk.Label(self.upper_sch_f, relief="ridge")
-        self.lb3.image = self.conv2img
-        self.lb3.configure(image=self.conv2img)
         self.lb3_tit = tk.Label(
             self.upper_sch_f, text='Shunt-Series Matching', relief="raised").grid(
             row=2, column=0, sticky="nsew")
         self.lb3.grid(row=3, column=0)
 
-        crcfg4 = CircuitFig.CircuitFig('orange', 2, True, 'c', 'l', 'c', ser0='NC', shu_chp='NC')
-        image = Image.open(io.BytesIO(crcfg4.image_data)).resize((300, 180), Image.ANTIALIAS)
-        self.conv2img = ImageTk.PhotoImage(image)
-
         self.lb4 = tk.Label(self.upper_sch_f, relief="ridge")
-        self.lb4.image = self.conv2img
-        self.lb4.configure(image=self.conv2img)
         self.lb4_tit = tk.Label(
             self.upper_sch_f, text='Series-Shunt Matching', relief="raised").grid(
             row=2, column=1, sticky="nsew")
         self.lb4.grid(row=3, column=1)
+
+        self.ld4img2gui(self.lb1, 'b', 1, False, ['c', 'l', 'c'], ['NC', '', ''], '32+11j')
+        self.ld4img2gui(self.lb2, 'y', 1, True, ['c', 'l', 'c'], ['', 'NC', ''])
+        self.ld4img2gui(self.lb3, 'g', 2, False, ['c', 'l', 'c'], ['NC', 'NC', ''])
+        self.ld4img2gui(self.lb4, 'orange', 2, True, ['c', 'l', 'c'], ['', 'NC', 'NC'])
 
         ###################################################################
         vcmd = (self.master.register(validatecontent), '%S')
@@ -121,6 +102,15 @@ class TkGui:
         self.ety1_i.pack(side=tk.LEFT)
         self.ety_lb1c = tk.Label(self.lower_ety_f, text='j')
         self.ety_lb1c.pack(side=tk.LEFT)
+
+    def ld4img2gui(self, label: tk.Label,
+                   color: str, stage: int, sh_se: bool,
+                   cmp_l: list, cmp_v: list, z_val: str = '50+0j'):
+        cr_cfg = CircuitFig.CircuitFig(color, stage, sh_se, cmp_l, cmp_v, z_val)
+        image = Image.open(io.BytesIO(cr_cfg.image_data)).resize((300, 180), Image.ANTIALIAS)
+        label.image = ImageTk.PhotoImage(image)
+        label.configure(image=label.image)
+        label.update()
 
     def fig2gui(self, plt_data: np.array,
                 label: str = '', color: str = 'r', mark: str = 's',
