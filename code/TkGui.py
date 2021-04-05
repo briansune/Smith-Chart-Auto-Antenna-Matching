@@ -6,11 +6,16 @@ import numpy as np
 import CircuitFig
 from PIL import ImageTk, Image
 import io
+import re
 # import MatchCal
 
 
 def validatecontent(s: str):
-    return s.isdigit() == bool(s)
+    result = re.match(r'[0-9.-]', s)
+    return result is not None
+
+
+l2z = lambda l: l[0] + 1j*l[1]
 
 
 class TkGui:
@@ -31,7 +36,7 @@ class TkGui:
 
         self.fig = Figure(figsize=(5, 6), dpi=100)
         self.fig_cvs = FigureCanvasTkAgg(self.fig, master=self.top_frame)
-        self.ax = self.fig.gca()
+        self.ax: Figure = self.fig.gca()
         self.fig_cvs.get_tk_widget().pack(side=tk.LEFT, padx=5, pady=5)
 
         try:
@@ -46,13 +51,14 @@ class TkGui:
 
         self.my_slot = skrf.Network('ring slot.s1p')
 
+        self.to_match_z = [50, 0]
+        self.ser_match_z = [50, 0]
+        self.shu_match_z = [50, 0]
+        self.shu_ser_match_z = [50, 0]
+        self.ser_shu_match_z = [50, 0]
         self.plt_z0 = np.array([[[50+0j]]])
         self.plt_freq = 2.45e9
-        self.fig2gui(np.array([[[50+0j]]]), 'To Match', 'r', 's')
-        self.fig2gui(np.array([[[50+0j]]]), 'After Match', 'b', 'o')
-        self.fig2gui(np.array([[[50+0j]]]), 'After Match', 'y', 'o')
-        self.fig2gui(np.array([[[50+0j]]]), 'After Match', 'g', 'o')
-        self.fig2gui(np.array([[[50+0j]]]), 'After Match', 'orange', 'o')
+        self.up2chart()
 
         self.lb1 = tk.Label(self.upper_sch_f, relief="ridge")
         self.lb1_tit = tk.Label(
@@ -85,8 +91,8 @@ class TkGui:
 
         ###################################################################
         vcmd = (self.master.register(validatecontent), '%S')
-        self.to_match_r = tk.StringVar(value='50')
-        self.to_match_i = tk.StringVar(value='0')
+        self.to_match_r = tk.StringVar(value=str(self.to_match_z[0]))
+        self.to_match_i = tk.StringVar(value=str(self.to_match_z[1]))
 
         self.ety_lb1 = tk.Label(self.lower_ety_f, text='To Match Complex Value')
         self.ety_lb1.pack(side=tk.TOP)
@@ -102,6 +108,22 @@ class TkGui:
         self.ety1_i.pack(side=tk.LEFT)
         self.ety_lb1c = tk.Label(self.lower_ety_f, text='j')
         self.ety_lb1c.pack(side=tk.LEFT)
+
+        self.enter = tk.Button(self.lower_ety_f, text="Enter",
+                               command=self.ld2chart)
+        self.enter.pack(side=tk.LEFT)
+
+    def ld2chart(self):
+        self.to_match_z = [float(self.ety1_r.get()), float(self.ety1_i.get())]
+        self.up2chart()
+
+    def up2chart(self):
+        self.ax.clear()
+        self.fig2gui(np.array([[[l2z(self.to_match_z)]]]), 'To Match', 'r', 's')
+        self.fig2gui(np.array([[[l2z(self.ser_match_z)]]]), 'After Match', 'b', 'o')
+        self.fig2gui(np.array([[[l2z(self.shu_match_z)]]]), 'After Match', 'y', 'o')
+        self.fig2gui(np.array([[[l2z(self.shu_ser_match_z)]]]), 'After Match', 'g', 'o')
+        self.fig2gui(np.array([[[l2z(self.ser_shu_match_z)]]]), 'After Match', 'orange', 'o')
 
     def ld4img2gui(self, label: tk.Label,
                    color: str, stage: int, sh_se: bool,
