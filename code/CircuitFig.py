@@ -1,5 +1,6 @@
 from schemdraw import Drawing, ImageFormat
 import schemdraw.elements as elm
+from matplotlib import pyplot as plt
 
 
 class CircuitFig:
@@ -58,5 +59,9 @@ class CircuitFig:
         self.up2img()
 
     def up2img(self):
-        self.d.draw(show=False)
+        self.fig = self.d.draw(show=False)
         self.image_data = self.d.get_imagedata(ImageFormat.PNG)
+        self.clsfig()
+
+    def clsfig(self):
+        plt.close(plt.gcf())

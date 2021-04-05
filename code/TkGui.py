@@ -7,7 +7,7 @@ import CircuitFig
 from PIL import ImageTk, Image
 import io
 import re
-# import MatchCal
+import MatchCal
 
 
 def validatecontent(s: str):
@@ -16,11 +16,22 @@ def validatecontent(s: str):
 
 
 l2z = lambda l: l[0] + 1j*l[1]
+s4cmp = lambda sf: 'nH' if sf == 'l' else 'pF'
+
+
+def ld4img2gui(label: tk.Label,
+               color: str, stage: int, sh_se: bool,
+               cmp_l: list, cmp_v: list, z_val: str = '50+0j', test: int = 0):
+    cr_cfg = CircuitFig.CircuitFig(color, stage, sh_se, cmp_l, cmp_v, z_val)
+    image = Image.open(io.BytesIO(cr_cfg.image_data)).resize((300, 180), Image.ANTIALIAS)
+    label.image = ImageTk.PhotoImage(image)
+    label.configure(image=label.image)
 
 
 class TkGui:
 
     def __init__(self, master):
+        self.cnt = 0
         self.master = master
         self.top_frame = tk.Frame(self.master)
         self.top_frame.pack(side=tk.LEFT)
@@ -31,8 +42,6 @@ class TkGui:
         self.upper_sch_f.grid(row=0, padx=(0, 5), pady=(5, 0), sticky="nsew")
         self.lower_ety_f = tk.Frame(self.right_frame)
         self.lower_ety_f.grid(row=1, padx=(0, 5), pady=(0, 5), sticky="nsew")
-
-        # MatchCal.MatchCal()
 
         self.fig = Figure(figsize=(5, 6), dpi=100)
         self.fig_cvs = FigureCanvasTkAgg(self.fig, master=self.top_frame)
@@ -84,10 +93,10 @@ class TkGui:
             row=2, column=1, sticky="nsew")
         self.lb4.grid(row=3, column=1)
 
-        self.ld4img2gui(self.lb1, 'b', 1, False, ['c', 'l', 'c'], ['NC', '', ''], '32+11j')
-        self.ld4img2gui(self.lb2, 'y', 1, True, ['c', 'l', 'c'], ['', 'NC', ''])
-        self.ld4img2gui(self.lb3, 'g', 2, False, ['c', 'l', 'c'], ['NC', 'NC', ''])
-        self.ld4img2gui(self.lb4, 'orange', 2, True, ['c', 'l', 'c'], ['', 'NC', 'NC'])
+        ld4img2gui(self.lb1, 'b', 1, False, ['c', 'l', 'c'], ['NC', '', ''])
+        ld4img2gui(self.lb2, 'y', 1, True, ['c', 'l', 'c'], ['', 'NC', ''])
+        ld4img2gui(self.lb3, 'g', 2, False, ['c', 'l', 'c'], ['NC', 'NC', ''])
+        ld4img2gui(self.lb4, 'orange', 2, True, ['c', 'l', 'c'], ['', 'NC', 'NC'])
 
         ###################################################################
         vcmd = (self.master.register(validatecontent), '%S')
@@ -115,7 +124,43 @@ class TkGui:
 
     def ld2chart(self):
         self.to_match_z = [float(self.ety1_r.get()), float(self.ety1_i.get())]
+
+        tmp_cal = MatchCal.MatchCal()
+        tmp_cal.tar_freq = self.plt_freq
+        to_mat = float(self.ety1_r.get()) + 1j * float(self.ety1_i.get())
+
+        tmp_cal.shu_0_sol(to_mat)
+        disp_str = f'{tmp_cal.shu:.2f} {s4cmp(tmp_cal.shu_t)}'
+        ld4img2gui(self.lb1, 'b', 1, False, [tmp_cal.shu_t, 'l', 'c'],
+                   [disp_str, '', ''],
+                   f'{int(tmp_cal.tmp_z.real)}+{int(tmp_cal.tmp_z.imag)}j')
+        self.ser_match_z = [tmp_cal.tmp_z.real, tmp_cal.tmp_z.imag]
+
+        tmp_cal.ser_0_sol(to_mat)
+        disp_str = f'{tmp_cal.ser:.2f} {s4cmp(tmp_cal.ser_t)}'
+        ld4img2gui(self.lb2, 'y', 1, True, ['c', tmp_cal.ser_t, 'c'],
+                   ['', disp_str, ''],
+                   f'{int(tmp_cal.tmp_z.real)}+{int(tmp_cal.tmp_z.imag)}j')
+        self.shu_match_z = [tmp_cal.tmp_z.real, tmp_cal.tmp_z.imag]
+
+        tmp_cal.sol_2stage(to_mat, True)
+        disp_str1 = f'{tmp_cal.ser:.2f} {s4cmp(tmp_cal.ser_t)}'
+        disp_str2 = f'{tmp_cal.shu:.2f} {s4cmp(tmp_cal.shu_t)}'
+        ld4img2gui(self.lb3, 'g', 2, False, [tmp_cal.shu_t, tmp_cal.ser_t, 'c'],
+                   [disp_str2, disp_str1, ''],
+                   f'{int(tmp_cal.tmp_z.real)}+{int(tmp_cal.tmp_z.imag)}j')
+        self.shu_ser_match_z = [tmp_cal.tmp_z.real, tmp_cal.tmp_z.imag]
+
+        tmp_cal.sol_2stage(to_mat)
+        disp_str1 = f'{tmp_cal.ser:.2f} {s4cmp(tmp_cal.ser_t)}'
+        disp_str2 = f'{tmp_cal.shu:.2f} {s4cmp(tmp_cal.shu_t)}'
+        ld4img2gui(self.lb4, 'orange', 2, True, ['c', tmp_cal.ser_t, tmp_cal.shu_t],
+                   ['', disp_str1, disp_str2],
+                   f'{int(tmp_cal.tmp_z.real)}+{int(tmp_cal.tmp_z.imag)}j')
+        self.ser_shu_match_z = [tmp_cal.tmp_z.real, tmp_cal.tmp_z.imag]
         self.up2chart()
+        self.cnt += 1
+
 
     def up2chart(self):
         self.ax.clear()
@@ -124,15 +169,6 @@ class TkGui:
         self.fig2gui(np.array([[[l2z(self.shu_match_z)]]]), 'After Match', 'y', 'o')
         self.fig2gui(np.array([[[l2z(self.shu_ser_match_z)]]]), 'After Match', 'g', 'o')
         self.fig2gui(np.array([[[l2z(self.ser_shu_match_z)]]]), 'After Match', 'orange', 'o')
-
-    def ld4img2gui(self, label: tk.Label,
-                   color: str, stage: int, sh_se: bool,
-                   cmp_l: list, cmp_v: list, z_val: str = '50+0j'):
-        cr_cfg = CircuitFig.CircuitFig(color, stage, sh_se, cmp_l, cmp_v, z_val)
-        image = Image.open(io.BytesIO(cr_cfg.image_data)).resize((300, 180), Image.ANTIALIAS)
-        label.image = ImageTk.PhotoImage(image)
-        label.configure(image=label.image)
-        label.update()
 
     def fig2gui(self, plt_data: np.array,
                 label: str = '', color: str = 'r', mark: str = 's',
