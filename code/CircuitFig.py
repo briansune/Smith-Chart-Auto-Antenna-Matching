@@ -6,7 +6,7 @@ class CircuitFig:
 
     def __init__(self, afm_c: str, stage: int, ser_shu_f: bool,
                  shu_an_t: chr, ser0_t: chr, shu_chp_t: chr,
-                 shu_an: str = '', ser0: str = '', shu_chp: str = ''):
+                 shu_an: str = '', ser0: str = '', shu_chp: str = '', final_z: str = '50+0j'):
 
         self.image_data = None
         self.d = Drawing()
@@ -34,6 +34,8 @@ class CircuitFig:
         if self.stage >= 3 or self.ser_shu_f:
             self.shu_chp = shu_chp
 
+        self.final_z = final_z
+
         self.set4cv()
         self.up2img()
 
@@ -53,7 +55,7 @@ class CircuitFig:
         self.d.add(elm.Ground())
         self.d.pop()
         lk2 = self.d.add(elm.Line().left())
-        self.d.add(elm.CurrentLabel().at(lk2).right().label('50 Ω')).color(self.afm_c)
+        self.d.add(elm.CurrentLabel().at(lk2).right().label(f'{self.final_z} Ω')).color(self.afm_c)
         self.up2img()
 
     def up2img(self):

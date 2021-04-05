@@ -9,6 +9,10 @@ import io
 # import MatchCal
 
 
+def validatecontent(s: str):
+    return s.isdigit() == bool(s)
+
+
 class TkGui:
 
     def __init__(self, master):
@@ -16,10 +20,12 @@ class TkGui:
         self.top_frame = tk.Frame(self.master)
         self.top_frame.pack(side=tk.LEFT)
         self.right_frame = tk.Frame(self.master)
-        self.right_frame.pack(side=tk.LEFT)
+        self.right_frame.pack(side=tk.LEFT, fill=tk.BOTH)
 
         self.upper_sch_f = tk.Frame(self.right_frame)
-        self.upper_sch_f.grid(row=0, padx=(0, 5), pady=5)
+        self.upper_sch_f.grid(row=0, padx=(0, 5), pady=(5, 0), sticky="nsew")
+        self.lower_ety_f = tk.Frame(self.right_frame)
+        self.lower_ety_f.grid(row=1, padx=(0, 5), pady=(0, 5), sticky="nsew")
 
         # MatchCal.MatchCal()
 
@@ -42,13 +48,13 @@ class TkGui:
 
         self.plt_z0 = np.array([[[50+0j]]])
         self.plt_freq = 2.45e9
-        self.fig2gui(np.array([[[50-50j]]]), 'To Match', 'r', 's')
-        self.fig2gui(np.array([[[50+50j]]]), 'After Match', 'b', 'o')
-        self.fig2gui(np.array([[[50-50j]]]), 'After Match', 'y', 'o')
-        self.fig2gui(np.array([[[74+84j]]]), 'After Match', 'g', 'o')
-        self.fig2gui(np.array([[[24-24j]]]), 'After Match', 'orange', 'o')
+        self.fig2gui(np.array([[[50+0j]]]), 'To Match', 'r', 's')
+        self.fig2gui(np.array([[[50+0j]]]), 'After Match', 'b', 'o')
+        self.fig2gui(np.array([[[50+0j]]]), 'After Match', 'y', 'o')
+        self.fig2gui(np.array([[[50+0j]]]), 'After Match', 'g', 'o')
+        self.fig2gui(np.array([[[50+0j]]]), 'After Match', 'orange', 'o')
 
-        crcfg = CircuitFig.CircuitFig('b', 1, False, 'c', 'l', 'c', '3pF')
+        crcfg = CircuitFig.CircuitFig('b', 1, False, 'c', 'l', 'c', shu_an='NC', final_z='32+11j')
         image = Image.open(io.BytesIO(crcfg.image_data)).resize((300, 180), Image.ANTIALIAS)
         self.conv2img = ImageTk.PhotoImage(image)
 
@@ -60,7 +66,7 @@ class TkGui:
             row=0, column=0, sticky="nsew")
         self.lb1.grid(row=1, column=0)
 
-        crcfg2 = CircuitFig.CircuitFig('y', 1, True, 'c', 'l', 'c', '', '8nH')
+        crcfg2 = CircuitFig.CircuitFig('y', 1, True, 'c', 'l', 'c', ser0='NC')
         image = Image.open(io.BytesIO(crcfg2.image_data)).resize((300, 180), Image.ANTIALIAS)
         self.conv2img = ImageTk.PhotoImage(image)
 
@@ -72,7 +78,7 @@ class TkGui:
             row=0, column=1, sticky="nsew")
         self.lb2.grid(row=1, column=1)
 
-        crcfg3 = CircuitFig.CircuitFig('g', 2, False, 'c', 'l', 'c', '12pF', '14nH', '')
+        crcfg3 = CircuitFig.CircuitFig('g', 2, False, 'c', 'l', 'c', shu_an='NC', ser0='NC')
         image = Image.open(io.BytesIO(crcfg3.image_data)).resize((300, 180), Image.ANTIALIAS)
         self.conv2img = ImageTk.PhotoImage(image)
 
@@ -84,7 +90,7 @@ class TkGui:
             row=2, column=0, sticky="nsew")
         self.lb3.grid(row=3, column=0)
 
-        crcfg4 = CircuitFig.CircuitFig('orange', 2, True, 'c', 'l', 'c', '', '7nH', '2pF')
+        crcfg4 = CircuitFig.CircuitFig('orange', 2, True, 'c', 'l', 'c', ser0='NC', shu_chp='NC')
         image = Image.open(io.BytesIO(crcfg4.image_data)).resize((300, 180), Image.ANTIALIAS)
         self.conv2img = ImageTk.PhotoImage(image)
 
@@ -96,14 +102,25 @@ class TkGui:
             row=2, column=1, sticky="nsew")
         self.lb4.grid(row=3, column=1)
 
-        self.bottom = tk.Frame(self.right_frame, width=200, height=200, background="bisque")
-        self.bottom.grid(row=1)
+        ###################################################################
+        vcmd = (self.master.register(validatecontent), '%S')
+        self.to_match_r = tk.StringVar(value='50')
+        self.to_match_i = tk.StringVar(value='0')
 
-        self.lb_txt = tk.StringVar().set('test')
-        self.label1 = tk.Label(self.bottom, text=self.lb_txt)
-        self.entry1 = tk.Entry(self.bottom)
-        self.entry1.pack()
-
+        self.ety_lb1 = tk.Label(self.lower_ety_f, text='To Match Complex Value')
+        self.ety_lb1.pack(side=tk.TOP)
+        self.ety_lb1b = tk.Label(self.lower_ety_f, text='Z = ')
+        self.ety_lb1b.pack(side=tk.LEFT)
+        self.ety1_r = tk.Entry(self.lower_ety_f, textvariable=self.to_match_r,
+                               validate='all', validatecommand=vcmd)
+        self.ety1_r.pack(side=tk.LEFT)
+        self.ety_lb1c = tk.Label(self.lower_ety_f, text=' + ')
+        self.ety_lb1c.pack(side=tk.LEFT)
+        self.ety1_i = tk.Entry(self.lower_ety_f, textvariable=self.to_match_i,
+                               validate='all', validatecommand=vcmd)
+        self.ety1_i.pack(side=tk.LEFT)
+        self.ety_lb1c = tk.Label(self.lower_ety_f, text='j')
+        self.ety_lb1c.pack(side=tk.LEFT)
 
     def fig2gui(self, plt_data: np.array,
                 label: str = '', color: str = 'r', mark: str = 's',
