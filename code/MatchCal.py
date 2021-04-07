@@ -57,12 +57,13 @@ class MatchCal:
             self.shu = abs(z) / (2 * pi * self.tar_freq) * self.ind_base
 
     def shu_50_sol(self, in_c: complex, ans_sel: bool = False):
-        if in_c.imag == 0:
-            self.tmp_z = in_c
-            return
+
         a = 50 - in_c.real
         b = 100 * in_c.imag
         c = 50 * (in_c.real ** 2 + in_c.imag ** 2)
+        if in_c.imag == 0 or a == 0:
+            self.tmp_z = in_c
+            return
 
         d = (b ** 2) - (4 * a * c)
         if ans_sel:
