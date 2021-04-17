@@ -1,2 +1,2 @@
 # Smith-chart-Antenna-Auto-Matching
-This is a auto matching script with GUI TKinter
+This is an auto matching script with GUI TKinter
