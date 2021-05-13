@@ -56,7 +56,7 @@ class MatchCal:
             self.shu_t: chr = 'l'
             self.shu = abs(z) / (2 * pi * self.tar_freq) * self.ind_base
 
-    def (self, in_c: complex, ans_sel: bool = False):
+    def shu_50_sol(self, in_c: complex, ans_sel: bool = False):
 
         a = 50 - in_c.real
         b = 100 * in_c.imag
