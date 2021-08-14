@@ -4,21 +4,30 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import numpy as np
 import CircuitFig
-from PIL import ImageTk, Image
+from PIL import ImageTk, Image, ImageDraw
 import io
 import MatchCal
 
 
-l2z = lambda l: l[0] + 1j*l[1]
+l2z = lambda l: l[0] + 1j * l[1]
 s4cmp = lambda sf: 'nH' if sf == 'l' else 'pF'
 
 
 def ld4img2gui(label: tk.Label,
                color: str, stage: int, sh_se: bool,
-               cmp_l: list, cmp_v: list, z_val: str = '50+0j'):
+               cmp_l: list, cmp_v: list, z_val: str = '50+0j',
+               valid: bool = True):
     cr_cfg = CircuitFig.CircuitFig(color, stage, sh_se, cmp_l, cmp_v, z_val)
     image = Image.open(io.BytesIO(cr_cfg.image_data)).resize((300, 180), Image.ANTIALIAS)
-    label.image = ImageTk.PhotoImage(image)
+
+    im = Image.new('RGBA', (300, 180), (255, 255, 255, 255))
+    draw = ImageDraw.Draw(im)
+    im.paste(image, (0, 0))
+    if not valid:
+        draw.line((0, 0, 300, 180), fill=(255, 0, 0, 255), width=5)
+        draw.line((0, 180, 300, 0), fill=(255, 0, 0, 255), width=5)
+    label.image = ImageTk.PhotoImage(im)
+
     label.configure(image=label.image)
 
 
@@ -60,7 +69,7 @@ class TkGui:
         self.shu_ser_match_z_b = [50, 0]
         self.ser_shu_match_z_a = [50, 0]
         self.ser_shu_match_z_b = [50, 0]
-        self.plt_z0 = np.array([[[50+0j]]])
+        self.plt_z0 = 50 + 0j
         self.plt_freq = 2.45e9
         self.up2chart()
 
@@ -100,12 +109,12 @@ class TkGui:
             row=4, column=1, sticky="nsew")
         self.lb6.grid(row=5, column=1)
 
-        ld4img2gui(self.lb1, 'b', 1, False, ['c', 'l', 'c'], ['NC', '', ''])
-        ld4img2gui(self.lb2, 'y', 1, True, ['c', 'l', 'c'], ['', 'NC', ''])
-        ld4img2gui(self.lb3, 'g', 2, False, ['c', 'l', 'c'], ['NC', 'NC', ''])
-        ld4img2gui(self.lb4, 'purple', 2, False, ['c', 'l', 'c'], ['NC', 'NC', ''])
-        ld4img2gui(self.lb5, 'orange', 2, True, ['c', 'l', 'c'], ['', 'NC', 'NC'])
-        ld4img2gui(self.lb6, 'brown', 2, True, ['c', 'l', 'c'], ['', 'NC', 'NC'])
+        ld4img2gui(self.lb1, 'b', 1, False, ['c', 'l', 'c'], ['NC', 'SHORT', ''])
+        ld4img2gui(self.lb2, 'y', 1, True, ['c', 'l', 'c'], ['', 'SHORT', ''])
+        ld4img2gui(self.lb3, 'g', 2, False, ['c', 'l', 'c'], ['NC', 'SHORT', ''])
+        ld4img2gui(self.lb4, 'purple', 2, False, ['c', 'l', 'c'], ['NC', 'SHORT', ''])
+        ld4img2gui(self.lb5, 'orange', 2, True, ['c', 'l', 'c'], ['', 'SHORT', 'NC'])
+        ld4img2gui(self.lb6, 'brown', 2, True, ['c', 'l', 'c'], ['', 'SHORT', 'NC'])
 
         ###################################################################
         self.to_match_r = tk.StringVar(value=str(self.to_match_z[0]))
@@ -136,49 +145,55 @@ class TkGui:
         to_mat = float(self.ety1_r.get()) + 1j * float(self.ety1_i.get())
 
         tmp_cal.shu_0_sol(to_mat)
-        disp_str = f'{tmp_cal.shu:.2f} {s4cmp(tmp_cal.shu_t)}'
+        disp_str = f'{tmp_cal.shu:.2f} {s4cmp(tmp_cal.shu_t)}' if tmp_cal.shu else 'NC'
         ld4img2gui(self.lb1, 'b', 1, False, [tmp_cal.shu_t, 'l', 'c'],
-                   [disp_str, '', ''],
-                   f'{int(tmp_cal.tmp_z.real)}+{int(tmp_cal.tmp_z.imag)}j')
+                   [disp_str, 'SHORT', ''],
+                   f'{int(tmp_cal.tmp_z.real)}+{int(tmp_cal.tmp_z.imag)}j',
+                   tmp_cal.sol_valid)
         self.ser_match_z = [tmp_cal.tmp_z.real, tmp_cal.tmp_z.imag]
 
         tmp_cal.ser_0_sol(to_mat)
-        disp_str = f'{tmp_cal.ser:.2f} {s4cmp(tmp_cal.ser_t)}'
+        disp_str = f'{tmp_cal.ser:.2f} {s4cmp(tmp_cal.ser_t)}' if tmp_cal.ser else 'SHORT'
         ld4img2gui(self.lb2, 'y', 1, True, ['c', tmp_cal.ser_t, 'c'],
                    ['', disp_str, ''],
-                   f'{int(tmp_cal.tmp_z.real)}+{int(tmp_cal.tmp_z.imag)}j')
+                   f'{int(tmp_cal.tmp_z.real)}+{int(tmp_cal.tmp_z.imag)}j',
+                   tmp_cal.sol_valid)
         self.shu_match_z = [tmp_cal.tmp_z.real, tmp_cal.tmp_z.imag]
 
         tmp_cal.sol_2stage(to_mat, True)
-        disp_str1 = f'{tmp_cal.ser:.2f} {s4cmp(tmp_cal.ser_t)}'
-        disp_str2 = f'{tmp_cal.shu:.2f} {s4cmp(tmp_cal.shu_t)}'
+        disp_str1 = f'{tmp_cal.ser:.2f} {s4cmp(tmp_cal.ser_t)}' if tmp_cal.ser else 'SHORT'
+        disp_str2 = f'{tmp_cal.shu:.2f} {s4cmp(tmp_cal.shu_t)}' if tmp_cal.shu else 'NC'
         ld4img2gui(self.lb3, 'g', 2, False, [tmp_cal.shu_t, tmp_cal.ser_t, 'c'],
                    [disp_str2, disp_str1, ''],
-                   f'{int(tmp_cal.tmp_z.real)}+{int(tmp_cal.tmp_z.imag)}j')
+                   f'{int(tmp_cal.tmp_z.real)}+{int(tmp_cal.tmp_z.imag)}j',
+                   tmp_cal.sol_valid)
         self.shu_ser_match_z_a = [tmp_cal.tmp_z.real, tmp_cal.tmp_z.imag]
 
         tmp_cal.sol_2stage(to_mat, True, True)
-        disp_str1 = f'{tmp_cal.ser:.2f} {s4cmp(tmp_cal.ser_t)}'
-        disp_str2 = f'{tmp_cal.shu:.2f} {s4cmp(tmp_cal.shu_t)}'
+        disp_str1 = f'{tmp_cal.ser:.2f} {s4cmp(tmp_cal.ser_t)}' if tmp_cal.ser else 'SHORT'
+        disp_str2 = f'{tmp_cal.shu:.2f} {s4cmp(tmp_cal.shu_t)}' if tmp_cal.shu else 'NC'
         ld4img2gui(self.lb4, 'purple', 2, False, [tmp_cal.shu_t, tmp_cal.ser_t, 'c'],
                    [disp_str2, disp_str1, ''],
-                   f'{int(tmp_cal.tmp_z.real)}+{int(tmp_cal.tmp_z.imag)}j')
+                   f'{int(tmp_cal.tmp_z.real)}+{int(tmp_cal.tmp_z.imag)}j',
+                   tmp_cal.sol_valid)
         self.shu_ser_match_z_b = [tmp_cal.tmp_z.real, tmp_cal.tmp_z.imag]
 
         tmp_cal.sol_2stage(to_mat)
-        disp_str1 = f'{tmp_cal.ser:.2f} {s4cmp(tmp_cal.ser_t)}'
-        disp_str2 = f'{tmp_cal.shu:.2f} {s4cmp(tmp_cal.shu_t)}'
+        disp_str1 = f'{tmp_cal.ser:.2f} {s4cmp(tmp_cal.ser_t)}' if tmp_cal.ser else 'SHORT'
+        disp_str2 = f'{tmp_cal.shu:.2f} {s4cmp(tmp_cal.shu_t)}' if tmp_cal.shu else 'NC'
         ld4img2gui(self.lb5, 'orange', 2, True, ['c', tmp_cal.ser_t, tmp_cal.shu_t],
                    ['', disp_str1, disp_str2],
-                   f'{int(tmp_cal.tmp_z.real)}+{int(tmp_cal.tmp_z.imag)}j')
+                   f'{int(tmp_cal.tmp_z.real)}+{int(tmp_cal.tmp_z.imag)}j',
+                   tmp_cal.sol_valid)
         self.ser_shu_match_z_a = [tmp_cal.tmp_z.real, tmp_cal.tmp_z.imag]
 
         tmp_cal.sol_2stage(to_mat, ans_sel=True)
-        disp_str1 = f'{tmp_cal.ser:.2f} {s4cmp(tmp_cal.ser_t)}'
-        disp_str2 = f'{tmp_cal.shu:.2f} {s4cmp(tmp_cal.shu_t)}'
+        disp_str1 = f'{tmp_cal.ser:.2f} {s4cmp(tmp_cal.ser_t)}' if tmp_cal.ser else 'SHORT'
+        disp_str2 = f'{tmp_cal.shu:.2f} {s4cmp(tmp_cal.shu_t)}' if tmp_cal.shu else 'NC'
         ld4img2gui(self.lb6, 'brown', 2, True, ['c', tmp_cal.ser_t, tmp_cal.shu_t],
                    ['', disp_str1, disp_str2],
-                   f'{int(tmp_cal.tmp_z.real)}+{int(tmp_cal.tmp_z.imag)}j')
+                   f'{int(tmp_cal.tmp_z.real)}+{int(tmp_cal.tmp_z.imag)}j',
+                   tmp_cal.sol_valid)
         self.ser_shu_match_z_b = [tmp_cal.tmp_z.real, tmp_cal.tmp_z.imag]
         self.up2chart()
 
